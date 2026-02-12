@@ -1,0 +1,100 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter);
+
+  /* Morningstar warm neutrals */
+  --color-slate-50: #F6F5F4;
+  --color-slate-100: #ECEBEA;
+  --color-slate-200: #DAD9D8;
+  --color-slate-300: #BDBCBA;
+  --color-slate-400: #9E9C9B;
+  --color-slate-500: #7F7D7A;
+  --color-slate-600: #64625F;
+  --color-slate-700: #4E4C4A;
+  --color-slate-800: #3D3B39;
+  --color-slate-900: #2C2B2A;
+  --color-slate-950: #1A1918;
+
+  /* VAL Brand Colors */
+  --color-brand-primary: var(--thinkval-primary);
+  --color-brand-primary-light: var(--thinkval-primary-light);
+  --color-brand-primary-dark: var(--thinkval-primary-dark);
+  --color-brand-accent: var(--thinkval-accent);
+
+  /* Text */
+  --color-text-primary: var(--thinkval-text-primary);
+  --color-text-secondary: var(--thinkval-text-secondary);
+  --color-text-muted: var(--thinkval-text-muted);
+
+  /* Backgrounds */
+  --color-bg-page: var(--thinkval-bg-page);
+  --color-bg-surface: var(--thinkval-bg-surface);
+  --color-bg-section: var(--thinkval-bg-section);
+  --color-bg-dark: var(--thinkval-bg-dark);
+
+  /* Borders */
+  --color-border-default: var(--thinkval-border-default);
+  --color-border-strong: var(--thinkval-border-strong);
+
+  /* State */
+  --color-success: var(--thinkval-success);
+  --color-error: var(--thinkval-error);
+  --color-warning: var(--thinkval-warning);
+  --color-info: var(--thinkval-info);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.5rem;
+
+  /* VAL Design System v1.2 */
+  --thinkval-primary: #1E3A5F;
+  --thinkval-primary-light: #2364B9;
+  --thinkval-primary-dark: #0F3D7C;
+  --thinkval-accent: #0D7D85;
+  --thinkval-text-primary: #2C2B2A;
+  --thinkval-text-secondary: #64625F;
+  --thinkval-text-muted: #9E9C9B;
+  --thinkval-bg-page: #F6F5F4;
+  --thinkval-bg-surface: #FFFFFF;
+  --thinkval-bg-section: #ECEBEA;
+  --thinkval-bg-dark: #1A1918;
+  --thinkval-border-default: #DAD9D8;
+  --thinkval-border-strong: #BDBCBA;
+
+  --thinkval-success: #039649;
+  --thinkval-error: #E42513;
+  --thinkval-warning: #F5C72C;
+  --thinkval-info: #2364B9;
+
+  --background: #F6F5F4;
+  --foreground: #2C2B2A;
+}
+
+@layer base {
+  * {
+    @apply border-border-default;
+  }
+  body {
+    @apply bg-bg-page text-text-primary;
+    font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+    font-size: 1rem;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.25;
+  }
+}
