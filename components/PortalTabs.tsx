@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import {
   BarChart3,
   Zap,
@@ -17,9 +17,11 @@ import {
   ChevronDown,
   Save,
   BookOpen,
+  Download,
+  FileSpreadsheet,
 } from "lucide-react";
 import Fuse from "fuse.js";
-import type { SitemapTab, SitemapResource, DocItem } from "@/lib/portal-db";
+import type { SitemapTab, SitemapResource, DocItem, ReportItem } from "@/lib/portal-db";
 import { ContentModal } from "@/components/ContentModal";
 import { cn } from "@/lib/cn";
 
@@ -42,12 +44,13 @@ interface PortalTabsProps {
   allResources: SitemapResource[];
   domain: string;
   domainDocs: DocItem[];
+  domainReports: ReportItem[];
   generalDocs: DocItem[];
 }
 
-type NavSection = "resources" | "domain-docs" | "guides";
+type NavSection = "resources" | "domain-docs" | "reports" | "guides";
 
-export function PortalTabs({ tabs: initialTabs, allResources, domain, domainDocs, generalDocs }: PortalTabsProps) {
+export function PortalTabs({ tabs: initialTabs, allResources, domain, domainDocs, domainReports, generalDocs }: PortalTabsProps) {
   const [tabs, setTabs] = useState(initialTabs);
   const [activeTab, setActiveTab] = useState(initialTabs[0]?.name || "");
   const [searchQuery, setSearchQuery] = useState("");
@@ -59,6 +62,7 @@ export function PortalTabs({ tabs: initialTabs, allResources, domain, domainDocs
   const [activeSolution, setActiveSolution] = useState<string | null>(null);
   const [activeNav, setActiveNav] = useState<NavSection>("resources");
   const [docModal, setDocModal] = useState<DocItem | null>(null);
+  const [reportModal, setReportModal] = useState<ReportItem | null>(null);
 
   // Extract unique solutions
   const solutions = useMemo(() => {
@@ -237,6 +241,9 @@ export function PortalTabs({ tabs: initialTabs, allResources, domain, domainDocs
           { key: "resources" as NavSection, label: "Resources", count: allResources.length },
           ...(domainDocs.length > 0
             ? [{ key: "domain-docs" as NavSection, label: "Documentation", count: domainDocs.length }]
+            : []),
+          ...(domainReports.length > 0
+            ? [{ key: "reports" as NavSection, label: "Reports", count: domainReports.length }]
             : []),
           ...(generalDocs.length > 0
             ? [{ key: "guides" as NavSection, label: "Guides", count: generalDocs.length }]
@@ -472,6 +479,11 @@ export function PortalTabs({ tabs: initialTabs, allResources, domain, domainDocs
         <DocsGrid docs={domainDocs} onOpenDoc={setDocModal} />
       )}
 
+      {/* ===== REPORTS VIEW ===== */}
+      {activeNav === "reports" && (
+        <ReportsGrid reports={domainReports} onOpenReport={setReportModal} />
+      )}
+
       {/* ===== GUIDES VIEW ===== */}
       {activeNav === "guides" && (
         <DocsGrid docs={generalDocs} onOpenDoc={setDocModal} />
@@ -488,6 +500,11 @@ export function PortalTabs({ tabs: initialTabs, allResources, domain, domainDocs
       {/* Doc modal */}
       {docModal && (
         <DocModal doc={docModal} onClose={() => setDocModal(null)} />
+      )}
+
+      {/* Report modal */}
+      {reportModal && (
+        <ReportModal report={reportModal} onClose={() => setReportModal(null)} />
       )}
     </div>
   );
@@ -676,5 +693,187 @@ function DocModal({
       }}
       onClose={onClose}
     />
+  );
+}
+
+/* ===== Reports Components ===== */
+
+function ReportsGrid({
+  reports,
+  onOpenReport,
+}: {
+  reports: ReportItem[];
+  onOpenReport: (report: ReportItem) => void;
+}) {
+  const grouped = useMemo(() => {
+    const map = new Map<string, ReportItem[]>();
+    for (const report of reports) {
+      const cat = report.category || "General";
+      if (!map.has(cat)) map.set(cat, []);
+      map.get(cat)!.push(report);
+    }
+    return Array.from(map.entries()).sort((a, b) =>
+      a[0].localeCompare(b[0])
+    );
+  }, [reports]);
+
+  if (reports.length === 0) {
+    return (
+      <div className="py-20 text-center">
+        <p className="text-text-secondary">No reports available yet.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8 pt-4">
+      {grouped.map(([category, categoryReports]) => (
+        <div key={category}>
+          <div className="mb-4 flex items-center gap-2">
+            <h3 className="text-base font-semibold text-text-primary capitalize">
+              {category}
+            </h3>
+            <span className="text-xs text-text-muted">
+              ({categoryReports.length})
+            </span>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {categoryReports.map((report) => (
+              <button
+                key={report.id}
+                onClick={() => onOpenReport(report)}
+                className="group relative flex flex-col gap-2 rounded-lg border border-border-default bg-bg-surface p-4 text-left transition-all hover:border-brand-primary/30 hover:shadow-md"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-brand-accent/10 text-brand-accent">
+                      {report.fileType === "excel" ? (
+                        <FileSpreadsheet size={16} />
+                      ) : (
+                        <FileText size={16} />
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-text-primary leading-tight">
+                        {report.title}
+                      </h4>
+                      <span className="text-[10px] uppercase tracking-wider text-text-muted">
+                        {report.fileType === "excel" ? "Excel Report" : "HTML Report"}
+                      </span>
+                    </div>
+                  </div>
+                  <Download
+                    size={14}
+                    className="mt-1 shrink-0 text-text-muted opacity-0 transition-opacity group-hover:opacity-100"
+                  />
+                </div>
+                {report.summary && (
+                  <p className="text-xs leading-relaxed text-text-secondary line-clamp-2">
+                    {report.summary}
+                  </p>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ReportModal({
+  report,
+  onClose,
+}: {
+  report: ReportItem;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [onClose]);
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
+
+  const handleDownload = () => {
+    if (report.fileType === "excel" && report.fileUrl) {
+      // Download original Excel from Supabase Storage
+      window.open(report.fileUrl, "_blank");
+    } else {
+      // Download HTML as .html file
+      const blob = new Blob([report.content], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${report.title.replace(/[^a-zA-Z0-9-_ ]/g, "")}.html`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="relative mx-4 flex h-[90vh] w-full max-w-5xl flex-col rounded-xl border border-border-default bg-bg-surface shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-border-default px-6 py-4">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-lg font-semibold text-text-primary truncate">
+              {report.title}
+            </h2>
+            {report.summary && (
+              <p className="mt-0.5 text-sm text-text-secondary">
+                {report.summary}
+              </p>
+            )}
+          </div>
+          <div className="flex items-center gap-2 ml-4">
+            <button
+              onClick={handleDownload}
+              className="flex items-center gap-1.5 rounded-lg bg-brand-primary px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-brand-primary-dark"
+            >
+              <Download size={14} />
+              Download
+            </button>
+            <button
+              onClick={onClose}
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-bg-section hover:text-text-primary"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="min-h-0 flex-1">
+          {report.fileType === "excel" && report.fileUrl ? (
+            <iframe
+              src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(report.fileUrl)}`}
+              title={report.title}
+              className="block h-full w-full border-0"
+            />
+          ) : (
+            <iframe
+              srcDoc={report.content}
+              sandbox="allow-same-origin allow-scripts"
+              title={report.title}
+              className="block h-full w-full border-0"
+            />
+          )}
+        </div>
+      </div>
+    </div>
   );
 }

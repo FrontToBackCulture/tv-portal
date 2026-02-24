@@ -4,6 +4,7 @@ import {
   getDomainInfo,
   getPortalConfig,
   getDomainDocs,
+  getDomainReports,
   getGeneralDocs,
 } from "@/lib/portal-db";
 import { PortalTabs } from "@/components/PortalTabs";
@@ -17,10 +18,11 @@ export const dynamic = "force-dynamic";
 export default async function PortalPage({ params }: PageProps) {
   const { domain } = await params;
   const domainInfo = getDomainInfo(domain);
-  const [resources, config, domainDocs, generalDocs] = await Promise.all([
+  const [resources, config, domainDocs, domainReports, generalDocs] = await Promise.all([
     getSitemapResources(domain),
     getPortalConfig(domain),
     getDomainDocs(domain),
+    getDomainReports(domain),
     getGeneralDocs(),
   ]);
   const tabs = groupIntoTabs(resources, config);
@@ -51,6 +53,7 @@ export default async function PortalPage({ params }: PageProps) {
           allResources={resources}
           domain={domain}
           domainDocs={domainDocs}
+          domainReports={domainReports}
           generalDocs={generalDocs}
         />
       </main>

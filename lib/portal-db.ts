@@ -37,6 +37,16 @@ export interface DocItem {
   category: string | null;
 }
 
+export interface ReportItem {
+  id: string;
+  title: string;
+  summary: string | null;
+  content: string;
+  category: string | null;
+  fileUrl: string | null;
+  fileType: "html" | "excel";
+}
+
 export interface PortalConfig {
   tabOrder: string[];
   sectionOrder: Record<string, string[]>;
@@ -102,6 +112,28 @@ export async function getDomainDocs(domain: string): Promise<DocItem[]> {
     summary: d.summary,
     content: d.content,
     category: d.category,
+  }));
+}
+
+export async function getDomainReports(domain: string): Promise<ReportItem[]> {
+  const { data, error } = await supabase
+    .from("portal_docs")
+    .select("*")
+    .eq("domain", domain)
+    .eq("doc_type", "report")
+    .order("category")
+    .order("title");
+
+  if (error || !data) return [];
+
+  return data.map((d) => ({
+    id: d.id,
+    title: d.title,
+    summary: d.summary,
+    content: d.content,
+    category: d.category,
+    fileUrl: d.file_url,
+    fileType: d.file_type as "html" | "excel",
   }));
 }
 
